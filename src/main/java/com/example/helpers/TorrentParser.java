@@ -4,6 +4,8 @@ import com.example.bencode.BencodeDecoder;
 import com.example.dto.TorrentDTO;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class TorrentParser {
@@ -11,6 +13,15 @@ public class TorrentParser {
         Map<String, Object> map = BencodeDecoder.decodeDictionary(0, fileBytes).first;
 
         TorrentDTO torrentDTO = new TorrentDTO();
+        byte[] infoBytes = BencodeDecoder.getInfoBytes(fileBytes);
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            byte[] mdBytes = md.digest(infoBytes);
+            torrentDTO.setInfoHash(mdBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
 
         if(map.containsKey("info") && map.get("info") instanceof Map) {
             Map<String, Object> infoMap = (Map<String, Object>) map.get("info");

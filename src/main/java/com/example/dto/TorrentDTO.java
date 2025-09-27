@@ -2,7 +2,7 @@ package com.example.dto;
 
 // Note: this is only for a single file torrent
 public class TorrentDTO {
-    private String infoHash;
+    private byte[] infoHash;
     private String announce;
     private String name;
     private Long length;
@@ -10,8 +10,8 @@ public class TorrentDTO {
     private byte[] pieces;
 
     // Getters and setters
-    public String getInfoHash() { return infoHash; }
-    public void setInfoHash(String infoHash) { this.infoHash = infoHash; }
+    public byte[] getInfoHash() { return infoHash; }
+    public void setInfoHash(byte[] infoHash) { this.infoHash = infoHash; }
 
     public String getAnnounce() { return announce; }
     public void setAnnounce(String announce) { this.announce = announce; }
