@@ -27,5 +27,15 @@ public class TorrentDTO {
 
     public byte[] getPieces() { return pieces; }
     public void setPieces(byte[] pieces) { this.pieces = pieces; }
+
+    public String getInfoHashAsString() {
+        StringBuilder sb = new StringBuilder();
+        for(byte b : infoHash) {
+            sb.append("%");
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
+    }
 }
 

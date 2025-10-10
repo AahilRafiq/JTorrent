@@ -5,7 +5,7 @@ import com.example.helpers.Pair;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class BencodeDecoder {
+public class Bencode {
 
     public static Pair<Long,Integer> decodeLong(int index, byte[] input) {
         List<Byte> bytes = new ArrayList<>();
@@ -96,9 +96,9 @@ public class BencodeDecoder {
                 index = pair4.second;
                 map.put(pair1.first, pair4.first);
             } else {
-                Pair<byte[],Integer> pair4 = decodeStringAsBytes(index, input);
-                index = pair4.second;
-                map.put(pair1.first, pair4.first);
+                Pair<byte[],Integer> pair5 = decodeStringAsBytes(index, input);
+                index = pair5.second;
+                map.put(pair1.first, pair5.first);
             }
         }
 

@@ -1,6 +1,6 @@
 package com.example.helpers;
 
-import com.example.bencode.BencodeDecoder;
+import com.example.bencode.Bencode;
 import com.example.dto.TorrentDTO;
 
 import java.nio.charset.StandardCharsets;
@@ -10,10 +10,10 @@ import java.util.Map;
 
 public class TorrentParser {
     public static TorrentDTO parseTorrent(byte[] fileBytes) {
-        Map<String, Object> map = BencodeDecoder.decodeDictionary(0, fileBytes).first;
+        Map<String, Object> map = Bencode.decodeDictionary(0, fileBytes).first;
 
         TorrentDTO torrentDTO = new TorrentDTO();
-        byte[] infoBytes = BencodeDecoder.getInfoBytes(fileBytes);
+        byte[] infoBytes = Bencode.getInfoBytes(fileBytes);
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
             byte[] mdBytes = md.digest(infoBytes);
