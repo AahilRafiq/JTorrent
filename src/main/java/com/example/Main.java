@@ -1,6 +1,7 @@
 package com.example;
 
 import com.example.dto.TorrentDTO;
+import com.example.helpers.RandomString;
 import com.example.helpers.TorrentParser;
 
 import okhttp3.*;
@@ -8,73 +9,64 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.*;
-import java.net.http.HttpRequest;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
-    public static void main(String []args) throws IOException, URISyntaxException {
-        var bytes = Files.readAllBytes(Path.of("/home/aahilrafiq/Downloads/debian.torrent"));
+    public static void main(String []args) throws IOException {
+        var bytes = Files.readAllBytes(Path.of("/home/aahilrafiq/Downloads/suse.torrent"));
         TorrentDTO torrent = TorrentParser.parseTorrent(bytes);
 
-
-
-        String byteAsString = new String(torrent.getInfoHash(), StandardCharsets.UTF_8);
-        String result = URLEncoder.encode(new String(torrent.getInfoHash(), StandardCharsets.US_ASCII), StandardCharsets.UTF_8);
-
-        StringBuilder infoHashEncoded = new StringBuilder();
-        for (byte b : torrent.getInfoHash()) {
-            if ((b >= '0' && b <= '9') || (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || b == '.' || b == '-' || b == '_' || b == '~') {
-                infoHashEncoded.append((char) b);
-            } else {
-                String hexString = String.format("%02x", b);
-                infoHashEncoded.append("%");
-                infoHashEncoded.append(hexString);
-            }
-        }
-        System.out.println(infoHashEncoded.toString());
-
-
         OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(40, TimeUnit.SECONDS)
                 .addNetworkInterceptor(new PortInterceptor())
                 .build();
 
-        URL url = new URI(torrent.getAnnounce()).toURL();
-        System.out.println(url.getProtocol());
+        Optional<URI> uri = torrent.getAnnounceList().stream()
+                .map(announce -> {
+                    try {
+                        return new URI(announce);
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .filter(announce -> announce.getScheme().equals("http") || announce.getScheme().equals("https"))
+                .findFirst();
 
+        if (uri.isEmpty()) {
+            throw new IOException("No HTTP(S) Tracker found");
+        }
 
-//        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(torrent.getAnnounce())).newBuilder()
-//                .addQueryParameter("d","sd")
-//                .build();
-
+        int port = uri.get().getScheme().equals("http") ? 80 : 443;
+        if(uri.get().getPort() != -1) port = uri.get().getPort();
+        String peerId = RandomString.getAlphaNumericString(20);
         HttpUrl httpUrl = new HttpUrl.Builder()
-                .scheme("https")
-                .host(url.getHost())
-                .port(80)
-                .addPathSegment("announce")
-                .addQueryParameter("info_hash", new String(torrent.getInfoHash(), StandardCharsets.ISO_8859_1))
+                .scheme(uri.get().getScheme())
+                .host(uri.get().getHost())
+                .port(port)
+                .addPathSegment(uri.get().getPath())
+                .addQueryParameter("info_hash", torrent.getInfoHashUrlEncoded())
                 .addQueryParameter("downloaded", "0")
                 .addQueryParameter("uploaded", "0")
                 .addQueryParameter("left", torrent.getLength().toString())
-                .addQueryParameter("peer_id", "47309681325840096130")
+                .addQueryParameter("peer_id", peerId)
                 .build();
 
         Request req = new Request.Builder()
                 .url(httpUrl)
+                .header("Connection", "close")
                 .get()
                 .build();
 
         try (Response response = client.newCall(req).execute()) {
-            System.out.println(response.body().string());
+//            System.out.println(response.body().string());
+            System.out.println(response.isSuccessful());
         }  catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void addQueryParam(StringBuilder builder, String key, String value) {
-        builder.append("&").append(key).append("=").append(value);
     }
 }
 
