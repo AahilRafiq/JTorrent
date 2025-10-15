@@ -47,8 +47,8 @@ public class Main {
                 .scheme(uri.get().getScheme())
                 .host(uri.get().getHost())
                 .port(port)
-                .addPathSegment(uri.get().getPath())
-                .addQueryParameter("info_hash", torrent.getInfoHashUrlEncoded())
+                .encodedPath(uri.get().getPath())
+                .addEncodedQueryParameter("info_hash", torrent.getInfoHashUrlEncoded())
                 .addQueryParameter("downloaded", "0")
                 .addQueryParameter("uploaded", "0")
                 .addQueryParameter("left", torrent.getLength().toString())
@@ -62,7 +62,7 @@ public class Main {
                 .build();
 
         try (Response response = client.newCall(req).execute()) {
-//            System.out.println(response.body().string());
+            System.out.println(response.body().string());
             System.out.println(response.isSuccessful());
         }  catch (IOException e) {
             e.printStackTrace();
